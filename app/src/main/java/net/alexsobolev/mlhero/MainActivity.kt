@@ -18,12 +18,29 @@ class MainActivity : ComponentActivity() {
         if (!permissionGranted()) {
             requestPermission()
         } else {
-            setContent {
-                Theme {
-                    Surface(color = MaterialTheme.colors.background) {
-                        CameraScreen()
-                    }
+            setupView()
+        }
+    }
+
+    private fun setupView() {
+        setContent {
+            Theme {
+                Surface(color = MaterialTheme.colors.background) {
+                    CameraScreen()
                 }
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String?>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 0) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                setupView()
             }
         }
     }
