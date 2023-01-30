@@ -50,6 +50,7 @@ dependencies {
     implementation("androidx.camera:camera-mlkit-vision:1.2.0-beta02")
 
     implementation("com.google.mlkit:barcode-scanning:17.0.3")
+    implementation("com.google.mlkit:face-detection:16.1.5")
 
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.0")

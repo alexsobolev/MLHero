@@ -22,6 +22,10 @@ import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.face.Face
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetector
+import com.google.mlkit.vision.face.FaceDetectorOptions
 
 @Composable
 fun CameraPreview(
@@ -41,9 +45,11 @@ fun CameraPreview(
         }
     }
 
-    var barcodes by remember { mutableStateOf<List<Barcode>>(emptyList()) }
+//    var barcodes by remember { mutableStateOf<List<Barcode>>(emptyList()) }
+    var faces by remember { mutableStateOf<List<Face>>(emptyList()) }
 
-    val barcodeScanner = buildBarcodeScanner()
+//    val barcodeScanner = buildBarcodeScanner()
+    val faceDetector = buildFaceDetector()
 
     val cameraController = remember(camera) {
         LifecycleCameraController(context).apply {
@@ -55,12 +61,18 @@ fun CameraPreview(
             setImageAnalysisAnalyzer(
                 ContextCompat.getMainExecutor(context),
                 MlKitAnalyzer(
-                    listOf(barcodeScanner),
+                    listOf(
+//                        barcodeScanner,
+                        faceDetector
+                    ),
                     CameraController.COORDINATE_SYSTEM_VIEW_REFERENCED,
                     ContextCompat.getMainExecutor(context)
                 ) { result ->
-                    result?.getValue(barcodeScanner)?.let { detectedBarcodes ->
-                        barcodes = detectedBarcodes
+                    /*     result?.getValue(barcodeScanner)?.let { detectedBarcodes ->
+                             barcodes = detectedBarcodes
+                         }*/
+                    result?.getValue(faceDetector)?.let { detectedFaces ->
+                        faces = detectedFaces
                     }
                 }
             )
@@ -74,7 +86,8 @@ fun CameraPreview(
         }
     )
 
-    Barcodes(barcodes = barcodes)
+//    Barcodes(barcodes = barcodes)
+    Faces(faces = faces)
 }
 
 private fun buildBarcodeScanner(): BarcodeScanner =
@@ -84,4 +97,16 @@ private fun buildBarcodeScanner(): BarcodeScanner =
             .build()
     )
 
+private fun buildFaceDetector(): FaceDetector {
+    val faceDetectorOptions = FaceDetectorOptions.Builder()
+        .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+        .setContourMode(FaceDetectorOptions.CONTOUR_MODE_NONE)
+        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+        .setMinFaceSize(MIN_FACE_SIZE)
+        .build()
+    return FaceDetection.getClient(faceDetectorOptions)
+}
+
 private val IMAGE_ANALYSIS_TARGET_SIZE = Size(480, 640)
+private const val MIN_FACE_SIZE = 0.2f
