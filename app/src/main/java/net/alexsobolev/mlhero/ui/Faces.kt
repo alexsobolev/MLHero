@@ -1,5 +1,6 @@
 package net.alexsobolev.mlhero.ui
 
+import android.text.TextPaint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -9,24 +10,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.ExperimentalTextApi
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.mlkit.vision.face.Face
 import net.alexsobolev.mlhero.R
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalTextApi::class)
 @Composable
 fun Faces(
     faces: List<Face>
 ) {
     val resources = LocalContext.current.resources
-    val textMeasurer = rememberTextMeasurer()
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         for (face in faces) {
@@ -43,19 +42,21 @@ fun Faces(
             )
 
             val smilingProbability = ((face.smilingProbability ?: 0f) * 100).roundToInt()
-            drawText(
-                textMeasurer = textMeasurer,
-                text = resources.getString(
-                    R.string.smile_x,
-                    smilingProbability
-                ),
-                topLeft = Offset(left, face.boundingBox.bottom.toFloat()),
-                style = TextStyle(
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    background = Color.Blue
+            drawIntoCanvas {
+                it.nativeCanvas.drawText(
+                    resources.getString(
+                        R.string.smile_x,
+                        smilingProbability
+                    ),
+                    left,
+                    face.boundingBox.bottom.toFloat(),
+                    TextPaint().apply {
+                        bgColor = Color.Blue.toArgb()
+                        color = Color.White.toArgb()
+                        textSize = 24.sp.toPx()
+                    }
                 )
-            )
+            }
         }
     }
 }
