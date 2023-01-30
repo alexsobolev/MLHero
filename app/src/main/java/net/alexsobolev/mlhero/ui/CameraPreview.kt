@@ -9,12 +9,19 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.google.mlkit.vision.barcode.BarcodeScanner
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 
 @Composable
 fun CameraPreview(
@@ -34,6 +41,10 @@ fun CameraPreview(
         }
     }
 
+    var barcodes by remember { mutableStateOf<List<Barcode>>(emptyList()) }
+
+    val barcodeScanner = buildBarcodeScanner()
+
     val cameraController = remember(camera) {
         LifecycleCameraController(context).apply {
             cameraSelector = CameraSelector.Builder().requireLensFacing(camera).build()
@@ -44,10 +55,14 @@ fun CameraPreview(
             setImageAnalysisAnalyzer(
                 ContextCompat.getMainExecutor(context),
                 MlKitAnalyzer(
-                    emptyList(),
+                    listOf(barcodeScanner),
                     CameraController.COORDINATE_SYSTEM_VIEW_REFERENCED,
                     ContextCompat.getMainExecutor(context)
-                ) { result -> }
+                ) { result ->
+                    result?.getValue(barcodeScanner)?.let { detectedBarcodes ->
+                        barcodes = detectedBarcodes
+                    }
+                }
             )
         }
     }
@@ -58,6 +73,15 @@ fun CameraPreview(
             previewView
         }
     )
+
+    Barcodes(barcodes = barcodes)
 }
+
+private fun buildBarcodeScanner(): BarcodeScanner =
+    BarcodeScanning.getClient(
+        BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
+            .build()
+    )
 
 private val IMAGE_ANALYSIS_TARGET_SIZE = Size(480, 640)
